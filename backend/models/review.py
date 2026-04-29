@@ -7,8 +7,8 @@ class ReviewCreate(BaseModel):
     overall_score: float = Field(..., ge=0, le=10)
     score_coding: float = Field(..., ge=0, le=10)
     score_speed: float = Field(..., ge=0, le=10)
-    score_price: float = Field(..., ge=0, le=10)
-    score_availability: float = Field(..., ge=0, le=10)
+    score_value: float = Field(..., ge=0, le=10)
+    score_context: float = Field(..., ge=0, le=10)
     score_creativity: float = Field(..., ge=0, le=10)
     score_accuracy: float = Field(..., ge=0, le=10)
     text: str = Field(..., min_length=50)
@@ -31,8 +31,8 @@ class ReviewPublic(BaseModel):
     overall_score: float
     score_coding: float
     score_speed: float
-    score_price: float
-    score_availability: float
+    score_value: float
+    score_context: float
     score_creativity: float
     score_accuracy: float
     text: str

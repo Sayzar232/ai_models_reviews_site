@@ -15,12 +15,12 @@ const ModelCard = {
         const overall = stats.avg_overall || 0;
         const reviewCount = stats.review_count || 0;
 
-        const radarLabels = ['Код', 'Скор.', 'Цена', 'Дост.', 'Креат.', 'Точн.'];
+        const radarLabels = ['Код', 'Скор.', 'Цена/Кач.', 'Конт.', 'Креат.', 'Точн.'];
         const radarScores = [
             stats.avg_coding || 0,
             stats.avg_speed || 0,
-            stats.avg_price || 0,
-            stats.avg_availability || 0,
+            stats.avg_value || 0,
+            stats.avg_context || 0,
             stats.avg_creativity || 0,
             stats.avg_accuracy || 0,
         ];
@@ -82,12 +82,12 @@ const ModelCard = {
             const scores = [
                 stats.avg_coding || 0,
                 stats.avg_speed || 0,
-                stats.avg_price || 0,
-                stats.avg_availability || 0,
+                stats.avg_value || 0,
+                stats.avg_context || 0,
                 stats.avg_creativity || 0,
                 stats.avg_accuracy || 0,
             ];
-            const labels = ['Код', 'Скор.', 'Цена', 'Дост.', 'Креат.', 'Точн.'];
+            const labels = ['Код', 'Скор.', 'Цена/Кач.', 'Конт.', 'Креат.', 'Точн.'];
 
             Charts.drawRadarChart(canvas, scores, labels);
         });

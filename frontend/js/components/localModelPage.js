@@ -17,16 +17,29 @@ const LocalModelPage = {
             const reviewFormHtml = LocalReviewForm.render(modelId);
             const reviewsHtml = await LocalReviewList.render(modelId);
             
+            let displayAuthor = model.author;
+            let displayName = model.name;
+            
+            if (displayName && displayName.includes('/')) {
+                const parts = displayName.split('/');
+                displayAuthor = parts[0];
+                displayName = parts.slice(1).join('/');
+            } else if (displayName && displayName.includes(': ')) {
+                const parts = displayName.split(': ');
+                displayAuthor = parts[0];
+                displayName = parts.slice(1).join(': ');
+            }
+
             let desc = model.description;
-            if (!desc && model.author) desc = `Локальная модель ${model.name} от ${model.author}.`;
+            if (!desc && displayAuthor) desc = `Локальная модель ${displayName} от ${displayAuthor}.`;
 
             let logoContent = `<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:${gradient}">${initials}</div>`;
             if (model.logo_url) {
-                logoContent = `<img src="${model.logo_url}" alt="${model.name} logo" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                logoContent = `<img src="${model.logo_url}" alt="${displayName} logo" style="width:100%;height:100%;object-fit:contain;border-radius:inherit;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
                    <div style="display:none;align-items:center;justify-content:center;width:100%;height:100%;background:${gradient}">${initials}</div>`;
             } else if (model.author) {
                 const hfLogo = `https://huggingface.co/avatars/${model.author}.svg`;
-                logoContent = `<img src="${hfLogo}" alt="${model.name} logo" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                logoContent = `<img src="${hfLogo}" alt="${displayName} logo" style="width:100%;height:100%;object-fit:contain;border-radius:inherit;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
                    <div style="display:none;align-items:center;justify-content:center;width:100%;height:100%;background:${gradient}">${initials}</div>`;
             }
 
@@ -34,13 +47,13 @@ const LocalModelPage = {
             const criteria = [
                 { key: 'coding', label: 'Программирование', icon: 'code-2' },
                 { key: 'speed', label: 'Скорость вывода', icon: 'zap' },
-                { key: 'vram', label: 'Оптимизация VRAM / Запуск', icon: 'cpu' },
+                { key: 'reasoning', label: 'Логика и интеллект', icon: 'brain' },
                 { key: 'context', label: 'Работа с контекстом', icon: 'layers' },
-                { key: 'creativity', label: 'Креативность', icon: 'sparkles' },
+                { key: 'instruction', label: 'Следование инструкциям', icon: 'list-checks' },
                 { key: 'accuracy', label: 'Точность фактов', icon: 'target' },
             ];
 
-            const barChartsHtml = criteria.map(c => {
+            const barChartsHtml = criteria.map(c => { 
                 const val = stats[`avg_${c.key}`] || 0;
                 const pct = (val / 10) * 100;
                 const color = Helpers.getRatingColor(val);
@@ -70,11 +83,13 @@ const LocalModelPage = {
                     <div class="model-detail-hero">
                         <div class="model-detail-logo">${logoContent}</div>
                         <div class="model-detail-info">
-                            <h1 class="model-detail-name">${Helpers.escapeHtml(model.name)}</h1>
+                            <h1 class="model-detail-name">${Helpers.escapeHtml(displayName)}</h1>
                             <div style="font-size:14px;color:var(--text-muted);margin-bottom:8px">
-                                ${model.parameters_approx > 0 ? model.parameters_approx + 'B ' : ''} 
-                                <span style="margin: 0 8px">•</span> 
-                                ${(model.downloads || 0).toLocaleString('ru-RU')} скачиваний
+                                <i data-lucide="user" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:4px"></i>
+                                ${Helpers.escapeHtml(displayAuthor || 'Неизвестно')}
+                                <span style="margin: 0 8px">•</span>
+                                <i data-lucide="layers" style="width:14px;height:14px;display:inline-block;vertical-align:middle;margin-right:4px"></i>
+                                ${model.parameters_approx > 0 ? model.parameters_approx + 'B' : '?'} 
                             </div>
                             <p class="model-detail-description">${Helpers.escapeHtml(desc)}</p>
                             ${model.website_url ? `

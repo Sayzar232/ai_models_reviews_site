@@ -123,8 +123,8 @@ const Charts = {
         const criteria = [
             { key: 'coding', label: 'Программирование', icon: 'code-2' },
             { key: 'speed', label: 'Скорость', icon: 'zap' },
-            { key: 'price', label: 'Цена', icon: 'wallet' },
-            { key: 'availability', label: 'Доступность в СНГ', icon: 'globe' },
+            { key: 'value', label: 'Соотношение цена/качество', icon: 'coins' },
+            { key: 'context', label: 'Работа с контекстом', icon: 'layers' },
             { key: 'creativity', label: 'Креативность', icon: 'sparkles' },
             { key: 'accuracy', label: 'Точность фактов', icon: 'target' },
         ];

@@ -8,14 +8,17 @@ router = APIRouter(prefix="/models", tags=["models"])
 async def get_models(
     sort: str = Query("rating", pattern="^(rating|reviews|name|date)$"),
     search: str = Query("", max_length=100),
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
 ):
+    offset = (page - 1) * limit
     base_query = """
         SELECT m.id, m.name, m.slug, m.logo_url, m.description, m.website_url, m.created_at,
                COALESCE(s.avg_overall, 0) as avg_overall,
                COALESCE(s.avg_coding, 0) as avg_coding,
                COALESCE(s.avg_speed, 0) as avg_speed,
-               COALESCE(s.avg_price, 0) as avg_price,
-               COALESCE(s.avg_availability, 0) as avg_availability,
+               COALESCE(s.avg_value, 0) as avg_value,
+               COALESCE(s.avg_context, 0) as avg_context,
                COALESCE(s.avg_creativity, 0) as avg_creativity,
                COALESCE(s.avg_accuracy, 0) as avg_accuracy,
                COALESCE(s.review_count, 0) as review_count
@@ -35,12 +38,12 @@ async def get_models(
         "name": "m.name ASC",
         "date": "m.created_at DESC",
     }
-    base_query += f" ORDER BY {order_map[sort]}"
+    base_query += f" ORDER BY {order_map[sort]}, m.id ASC LIMIT ${2 if search else 1} OFFSET ${3 if search else 2}"
 
     if search_param:
-        rows = await fetch_all(base_query, search_param)
+        rows = await fetch_all(base_query, search_param, limit, offset)
     else:
-        rows = await fetch_all(base_query)
+        rows = await fetch_all(base_query, limit, offset)
 
     return [
         {
@@ -55,8 +58,8 @@ async def get_models(
                 "avg_overall": round(float(r["avg_overall"]), 2),
                 "avg_coding": round(float(r["avg_coding"]), 2),
                 "avg_speed": round(float(r["avg_speed"]), 2),
-                "avg_price": round(float(r["avg_price"]), 2),
-                "avg_availability": round(float(r["avg_availability"]), 2),
+                "avg_value": round(float(r["avg_value"]), 2),
+                "avg_context": round(float(r["avg_context"]), 2),
                 "avg_creativity": round(float(r["avg_creativity"]), 2),
                 "avg_accuracy": round(float(r["avg_accuracy"]), 2),
                 "review_count": r["review_count"],
@@ -74,8 +77,8 @@ async def get_model(model_id: int):
                COALESCE(s.avg_overall, 0) as avg_overall,
                COALESCE(s.avg_coding, 0) as avg_coding,
                COALESCE(s.avg_speed, 0) as avg_speed,
-               COALESCE(s.avg_price, 0) as avg_price,
-               COALESCE(s.avg_availability, 0) as avg_availability,
+               COALESCE(s.avg_value, 0) as avg_value,
+               COALESCE(s.avg_context, 0) as avg_context,
                COALESCE(s.avg_creativity, 0) as avg_creativity,
                COALESCE(s.avg_accuracy, 0) as avg_accuracy,
                COALESCE(s.review_count, 0) as review_count
@@ -100,8 +103,8 @@ async def get_model(model_id: int):
             "avg_overall": round(float(row["avg_overall"]), 2),
             "avg_coding": round(float(row["avg_coding"]), 2),
             "avg_speed": round(float(row["avg_speed"]), 2),
-            "avg_price": round(float(row["avg_price"]), 2),
-            "avg_availability": round(float(row["avg_availability"]), 2),
+            "avg_value": round(float(row["avg_value"]), 2),
+            "avg_context": round(float(row["avg_context"]), 2),
             "avg_creativity": round(float(row["avg_creativity"]), 2),
             "avg_accuracy": round(float(row["avg_accuracy"]), 2),
             "review_count": row["review_count"],

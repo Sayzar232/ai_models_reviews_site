@@ -7,16 +7,19 @@ router = APIRouter(prefix="/local-models", tags=["local-models"])
 async def get_local_models(
     sort: str = Query("rating", pattern="^(rating|reviews|name|date|downloads)$"),
     search: str = Query("", max_length=100),
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
 ):
+    offset = (page - 1) * limit
     base_query = """
         SELECT m.id, m.name, m.slug, m.author, m.logo_url, m.description, m.website_url, 
                m.parameters_approx, m.downloads, m.created_at,
                COALESCE(s.avg_overall, 0) as avg_overall,
                COALESCE(s.avg_coding, 0) as avg_coding,
                COALESCE(s.avg_speed, 0) as avg_speed,
-               COALESCE(s.avg_vram, 0) as avg_vram,
+               COALESCE(s.avg_reasoning, 0) as avg_reasoning,
                COALESCE(s.avg_context, 0) as avg_context,
-               COALESCE(s.avg_creativity, 0) as avg_creativity,
+               COALESCE(s.avg_instruction, 0) as avg_instruction,
                COALESCE(s.avg_accuracy, 0) as avg_accuracy,
                COALESCE(s.review_count, 0) as review_count
         FROM local_models m
@@ -36,12 +39,12 @@ async def get_local_models(
         "date": "m.created_at DESC",
         "downloads": "m.downloads DESC",
     }
-    base_query += f" ORDER BY {order_map[sort]}"
+    base_query += f" ORDER BY {order_map[sort]}, m.id ASC LIMIT ${2 if search else 1} OFFSET ${3 if search else 2}"
 
     if search_param:
-        rows = await fetch_all(base_query, search_param)
+        rows = await fetch_all(base_query, search_param, limit, offset)
     else:
-        rows = await fetch_all(base_query)
+        rows = await fetch_all(base_query, limit, offset)
 
     return [
         {
@@ -59,9 +62,9 @@ async def get_local_models(
                 "avg_overall": round(float(r["avg_overall"]), 2),
                 "avg_coding": round(float(r["avg_coding"]), 2),
                 "avg_speed": round(float(r["avg_speed"]), 2),
-                "avg_vram": round(float(r["avg_vram"]), 2),
+                "avg_reasoning": round(float(r["avg_reasoning"]), 2),
                 "avg_context": round(float(r["avg_context"]), 2),
-                "avg_creativity": round(float(r["avg_creativity"]), 2),
+                "avg_instruction": round(float(r["avg_instruction"]), 2),
                 "avg_accuracy": round(float(r["avg_accuracy"]), 2),
                 "review_count": r["review_count"],
             },
@@ -79,9 +82,9 @@ async def get_local_model(model_id: int):
                COALESCE(s.avg_overall, 0) as avg_overall,
                COALESCE(s.avg_coding, 0) as avg_coding,
                COALESCE(s.avg_speed, 0) as avg_speed,
-               COALESCE(s.avg_vram, 0) as avg_vram,
+               COALESCE(s.avg_reasoning, 0) as avg_reasoning,
                COALESCE(s.avg_context, 0) as avg_context,
-               COALESCE(s.avg_creativity, 0) as avg_creativity,
+               COALESCE(s.avg_instruction, 0) as avg_instruction,
                COALESCE(s.avg_accuracy, 0) as avg_accuracy,
                COALESCE(s.review_count, 0) as review_count
         FROM local_models m
@@ -108,9 +111,9 @@ async def get_local_model(model_id: int):
             "avg_overall": round(float(row["avg_overall"]), 2),
             "avg_coding": round(float(row["avg_coding"]), 2),
             "avg_speed": round(float(row["avg_speed"]), 2),
-            "avg_vram": round(float(row["avg_vram"]), 2),
+            "avg_reasoning": round(float(row["avg_reasoning"]), 2),
             "avg_context": round(float(row["avg_context"]), 2),
-            "avg_creativity": round(float(row["avg_creativity"]), 2),
+            "avg_instruction": round(float(row["avg_instruction"]), 2),
             "avg_accuracy": round(float(row["avg_accuracy"]), 2),
             "review_count": row["review_count"],
         },

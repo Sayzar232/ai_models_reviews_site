@@ -128,8 +128,8 @@ const API = {
 
     // === Models endpoints ===
 
-    async getModels(sort = 'rating', search = '') {
-        let endpoint = `/models?sort=${sort}`;
+    async getModels(sort = 'rating', search = '', page = 1, limit = 20) {
+        let endpoint = `/models?sort=${sort}&page=${page}&limit=${limit}`;
         if (search) endpoint += `&search=${encodeURIComponent(search)}`;
         return await this.request(endpoint);
     },
@@ -160,8 +160,8 @@ const API = {
 
     // === Local Models endpoints ===
 
-    async getLocalModels(sort = 'rating', search = '') {
-        let endpoint = `/local-models?sort=${sort}`;
+    async getLocalModels(sort = 'rating', search = '', page = 1, limit = 20) {
+        let endpoint = `/local-models?sort=${sort}&page=${page}&limit=${limit}`;
         if (search) endpoint += `&search=${encodeURIComponent(search)}`;
         return await this.request(endpoint);
     },

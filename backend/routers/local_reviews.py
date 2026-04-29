@@ -30,7 +30,7 @@ async def get_local_reviews(
     rows = await fetch_all(
         """
         SELECT r.id, r.user_id, r.model_id, r.overall_score, r.score_coding, r.score_speed,
-               r.score_vram, r.score_context, r.score_creativity, r.score_accuracy,
+               r.score_reasoning, r.score_context, r.score_instruction, r.score_accuracy,
                r.text, r.tags, r.likes_count, r.dislikes_count, r.created_at,
                u.nickname, u.role as user_role, u.avatar_url,
                COALESCE(v.vote, 0) as user_vote
@@ -57,9 +57,9 @@ async def get_local_reviews(
             "overall_score": float(r["overall_score"]),
             "score_coding": float(r["score_coding"]),
             "score_speed": float(r["score_speed"]),
-            "score_vram": float(r["score_vram"]),
+            "score_reasoning": float(r["score_reasoning"]),
             "score_context": float(r["score_context"]),
-            "score_creativity": float(r["score_creativity"]),
+            "score_instruction": float(r["score_instruction"]),
             "score_accuracy": float(r["score_accuracy"]),
             "text": r["text"],
             "tags": tags,
@@ -109,11 +109,11 @@ async def create_local_review(
     review = await fetch_one(
         """
         INSERT INTO local_reviews (user_id, model_id, overall_score, score_coding, score_speed,
-                             score_vram, score_context, score_creativity, score_accuracy,
+                             score_reasoning, score_context, score_instruction, score_accuracy,
                              text, tags)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb)
         RETURNING id, user_id, model_id, overall_score, score_coding, score_speed,
-                  score_vram, score_context, score_creativity, score_accuracy,
+                  score_reasoning, score_context, score_instruction, score_accuracy,
                   text, tags, created_at
         """,
         current_user["id"],
@@ -121,9 +121,9 @@ async def create_local_review(
         data.overall_score,
         data.score_coding,
         data.score_speed,
-        data.score_vram,
+        data.score_reasoning,
         data.score_context,
-        data.score_creativity,
+        data.score_instruction,
         data.score_accuracy,
         data.text,
         tags_json,
@@ -139,9 +139,9 @@ async def create_local_review(
         "overall_score": float(review["overall_score"]),
         "score_coding": float(review["score_coding"]),
         "score_speed": float(review["score_speed"]),
-        "score_vram": float(review["score_vram"]),
+        "score_reasoning": float(review["score_reasoning"]),
         "score_context": float(review["score_context"]),
-        "score_creativity": float(review["score_creativity"]),
+        "score_instruction": float(review["score_instruction"]),
         "score_accuracy": float(review["score_accuracy"]),
         "text": review["text"],
         "tags": tags,

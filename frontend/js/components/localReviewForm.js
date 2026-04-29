@@ -23,9 +23,9 @@ const LocalReviewForm = {
         const sliders = [
             { key: 'coding', label: 'Программирование', icon: 'code-2' },
             { key: 'speed', label: 'Скорость вывода', icon: 'zap' },
-            { key: 'vram', label: 'Оптимизация VRAM / Запуск', icon: 'cpu' },
+            { key: 'reasoning', label: 'Логика и интеллект', icon: 'brain' },
             { key: 'context', label: 'Работа с контекстом', icon: 'layers' },
-            { key: 'creativity', label: 'Креативность', icon: 'sparkles' },
+            { key: 'instruction', label: 'Следование инструкциям', icon: 'list-checks' },
             { key: 'accuracy', label: 'Точность фактов', icon: 'target' },
         ];
 
@@ -120,16 +120,16 @@ const LocalReviewForm = {
             overall_score: parseFloat(((
                 getSliderVal('coding') +
                 getSliderVal('speed') +
-                getSliderVal('vram') +
+                getSliderVal('reasoning') +
                 getSliderVal('context') +
-                getSliderVal('creativity') +
+                getSliderVal('instruction') +
                 getSliderVal('accuracy')
             ) / 6).toFixed(1)),
             score_coding: getSliderVal('coding'),
             score_speed: getSliderVal('speed'),
-            score_vram: getSliderVal('vram'),
+            score_reasoning: getSliderVal('reasoning'),
             score_context: getSliderVal('context'),
-            score_creativity: getSliderVal('creativity'),
+            score_instruction: getSliderVal('instruction'),
             score_accuracy: getSliderVal('accuracy'),
             text,
             tags: this.selectedTags,

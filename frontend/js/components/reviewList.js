@@ -26,7 +26,7 @@ const ReviewList = {
         const init = Helpers.getUserInitial(a.nickname || '?');
         const badges = [
             {l:'Код',v:review.score_coding},{l:'Скор.',v:review.score_speed},
-            {l:'Цена',v:review.score_price},{l:'Дост.',v:review.score_availability},
+            {l:'Цена/Кач.',v:review.score_value},{l:'Контекст',v:review.score_context},
             {l:'Креат.',v:review.score_creativity},{l:'Точн.',v:review.score_accuracy}
         ].map(s=>`<span class="review-score-badge"><span class="label">${s.l}</span><span class="value">${s.v.toFixed(1)}</span></span>`).join('');
         const tags = (review.tags||[]).map(t=>`<span class="review-tag-badge">${Helpers.escapeHtml(t)}</span>`).join('');

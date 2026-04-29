@@ -129,10 +129,13 @@ const Helpers = {
     criteriaLabels: {
         coding: 'Программирование',
         speed: 'Скорость',
-        price: 'Цена',
-        availability: 'Доступность в СНГ',
+        value: 'Соотношение цена/качество',
+        context: 'Работа с контекстом',
         creativity: 'Креативность',
         accuracy: 'Точность фактов',
+        // local models
+        reasoning: 'Логика и интеллект',
+        instruction: 'Следование инструкциям',
     },
 
     /**
@@ -141,9 +144,12 @@ const Helpers = {
     criteriaIcons: {
         coding: 'code-2',
         speed: 'zap',
-        price: 'wallet',
-        availability: 'globe',
+        value: 'coins',
+        context: 'layers',
         creativity: 'sparkles',
         accuracy: 'target',
+        // local models
+        reasoning: 'brain',
+        instruction: 'list-checks',
     },
 };

@@ -9,10 +9,19 @@ LOGO_DEV_TOKEN = os.getenv("LOGO_DEV_TOKEN")
 
 url = "https://openrouter.ai/api/v1/models"
 
+MIN_PARAMS_B = 200
+
 providers = ["qwen", "z-ai", "x-ai", "google", "minimax", "openai", "anthropic", "mistralai", "nvidia", "moonshotai", "deepseek"]
 models_information = []
 # дата отсечки: 1 января 2025
-cutoff = datetime(2025, 9, 1).timestamp()
+cutoff = datetime(2025, 8, 1).timestamp()
+
+def check_params_in_model_name(model):
+    for i in range(1, MIN_PARAMS_B):
+        if f"{i}B" in model or f"{i}b" in model:
+            return False
+    return True
+
 
 def get_models():
     response = requests.get(url)
@@ -20,7 +29,7 @@ def get_models():
 
     new_models = [
         m for m in models
-        if m.get("created", 0) >= cutoff and m.get("id", "").split("/")[0] in providers and m.get("architecture", "").get("output_modalities")[0] == "text"
+        if m.get("created", 0) >= cutoff and m.get("id", "").split("/")[0] in providers and m.get("architecture", "").get("output_modalities") == ["text"] and check_params_in_model_name(m["name"]) and check_params_in_model_name(m["id"])
     ]
 
     # сортируем по дате (новые сверху)
@@ -44,16 +53,16 @@ def get_models():
 
 def get_logo_url(provider):
     provider_logos = {
-        "qwen": f"https://img.logo.dev/qwen.ai?token={LOGO_DEV_TOKEN}",
-        "z-ai": f"https://img.logo.dev/chat.z.ai?token={LOGO_DEV_TOKEN}",
-        "x-ai": f"https://img.logo.dev/grok.com?token={LOGO_DEV_TOKEN}",
-        "google": f"https://img.logo.dev/gemini.google.com?token={LOGO_DEV_TOKEN}",
-        "minimax": f"https://img.logo.dev/minimax.io?token={LOGO_DEV_TOKEN}",
-        "openai": f"https://img.logo.dev/openai.com?token={LOGO_DEV_TOKEN}",
-        "anthropic": f"https://img.logo.dev/claude.ai?token={LOGO_DEV_TOKEN}",
-        "mistralai": f"https://img.logo.dev/mistral.ai?token={LOGO_DEV_TOKEN}",
-        "nvidia": f"https://img.logo.dev/nvidia.com?token={LOGO_DEV_TOKEN}",
-        "moonshotai": f"https://img.logo.dev/moonshot.ai?token={LOGO_DEV_TOKEN}",
-        "deepseek": f"https://img.logo.dev/deepseek.com?token={LOGO_DEV_TOKEN}",
+        "qwen": f"images/qwen.jpg",
+        "z-ai": f"images/z-ai.jpg",
+        "x-ai": f"images/grok.png",
+        "google": f"images/gemini.jpg",
+        "minimax": f"images/minimax.jpg",
+        "openai": f"images/openai.webp",
+        "anthropic": f"images/claude.jpg",
+        "mistralai": f"images/mistral.jpg",
+        "nvidia": f"images/nvidia.jpg",
+        "moonshotai": f"images/moonshot.png",
+        "deepseek": f"images/deepseek.jpg",
     }
     return provider_logos.get(provider, "")

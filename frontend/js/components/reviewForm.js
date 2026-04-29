@@ -23,8 +23,8 @@ const ReviewForm = {
         const sliders = [
             { key: 'coding', label: 'Программирование', icon: 'code-2' },
             { key: 'speed', label: 'Скорость', icon: 'zap' },
-            { key: 'price', label: 'Цена', icon: 'wallet' },
-            { key: 'availability', label: 'Доступность в СНГ', icon: 'globe' },
+            { key: 'value', label: 'Соотношение цена/качество', icon: 'coins' },
+            { key: 'context', label: 'Работа с контекстом', icon: 'layers' },
             { key: 'creativity', label: 'Креативность', icon: 'sparkles' },
             { key: 'accuracy', label: 'Точность фактов', icon: 'target' },
         ];
@@ -120,15 +120,15 @@ const ReviewForm = {
             overall_score: parseFloat(((
                 getSliderVal('coding') +
                 getSliderVal('speed') +
-                getSliderVal('price') +
-                getSliderVal('availability') +
+                getSliderVal('value') +
+                getSliderVal('context') +
                 getSliderVal('creativity') +
                 getSliderVal('accuracy')
             ) / 6).toFixed(1)),
             score_coding: getSliderVal('coding'),
             score_speed: getSliderVal('speed'),
-            score_price: getSliderVal('price'),
-            score_availability: getSliderVal('availability'),
+            score_value: getSliderVal('value'),
+            score_context: getSliderVal('context'),
             score_creativity: getSliderVal('creativity'),
             score_accuracy: getSliderVal('accuracy'),
             text,

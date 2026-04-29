@@ -7,10 +7,76 @@ const App = {
     currentSort: 'rating',
     currentSearch: '',
     modelsCache: null,
+    
+    // Pagination
+    currentPage: 1,
+    isLoading: false,
+    hasMore: true,
+    limit: 10,
+    observer: null,
+
+    resetPagination() {
+        this.currentPage = 1;
+        this.isLoading = false;
+        this.hasMore = true;
+    },
+
+    initObserver(loadFn) {
+        if (this.observer) this.observer.disconnect();
+        this.observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && !this.isLoading && this.hasMore) {
+                loadFn();
+            }
+        }, { rootMargin: '150px' });
+    },
+
+    observeSentinel(container) {
+        let sentinel = document.getElementById('scroll-sentinel');
+        if (!sentinel) {
+            sentinel = document.createElement('div');
+            sentinel.id = 'scroll-sentinel';
+            sentinel.style.height = '20px';
+            container.parentNode.appendChild(sentinel);
+        }
+        this.observer.observe(sentinel);
+    },
 
     init() {
         window.addEventListener('hashchange', () => this.handleRoute());
+        this._startMouseParallax();
         this.handleRoute();
+    },
+
+    _startMouseParallax() {
+        // Целевые координаты курсора (нормализованы: -1..+1 от центра)
+        let targetX = 0;
+        let targetY = 0;
+        // Текущие интерполированные значения
+        let currentX = 0;
+        let currentY = 0;
+        const ease = 0.04;      // плавность (меньше = медленнее)
+        const strength = 80;    // максимальный сдвиг в пикселях
+
+        window.addEventListener('mousemove', (e) => {
+            // -1..+1 относительно центра экрана
+            targetX = (e.clientX / window.innerWidth  - 0.5) * 2;
+            targetY = (e.clientY / window.innerHeight - 0.5) * 2;
+        });
+
+        const tick = () => {
+            currentX += (targetX - currentX) * ease;
+            currentY += (targetY - currentY) * ease;
+
+            // Сетка уходит в ОБРАТНУЮ сторону от курсора
+            const offsetX = (-currentX * strength).toFixed(2);
+            const offsetY = (-currentY * strength).toFixed(2);
+
+            document.body.style.setProperty('--grid-x', `${offsetX}px`);
+            document.body.style.setProperty('--grid-y', `${offsetY}px`);
+            requestAnimationFrame(tick);
+        };
+
+        requestAnimationFrame(tick);
     },
 
     navigate(hash) {
@@ -76,22 +142,41 @@ const App = {
         if (searchInput) {
             searchInput.addEventListener('input', Helpers.debounce((e) => {
                 this.currentSearch = e.target.value;
+                this.resetPagination();
+                const grid = document.getElementById('models-grid');
+                if (grid) grid.innerHTML = Helpers.createSkeletonCards(6);
                 this.loadModels();
             }, 300));
         }
 
+        this.resetPagination();
         await this.loadModels();
+        this.initObserver(() => this.loadModels());
+        this.observeSentinel(document.getElementById('models-grid'));
     },
 
     async loadModels() {
+        if (this.isLoading || !this.hasMore) return;
+        this.isLoading = true;
+
         const grid = document.getElementById('models-grid');
-        if (!grid) return;
+        if (!grid) {
+            this.isLoading = false;
+            return;
+        }
 
         try {
-            const models = await API.getModels(this.currentSort, this.currentSearch);
-            this.modelsCache = models;
+            const models = await API.getModels(this.currentSort, this.currentSearch, this.currentPage, this.limit);
+            
+            if (this.currentPage === 1) {
+                grid.innerHTML = '';
+            }
 
-            if (models.length === 0) {
+            if (models.length < this.limit) {
+                this.hasMore = false;
+            }
+
+            if (models.length === 0 && this.currentPage === 1) {
                 grid.innerHTML = `
                     <div class="empty-state" style="grid-column:1/-1">
                         <i data-lucide="search-x"></i>
@@ -100,22 +185,30 @@ const App = {
                     </div>
                 `;
                 lucide.createIcons({ nodes: [grid] });
+                this.isLoading = false;
                 return;
             }
 
-            grid.innerHTML = models.map(m => ModelCard.render(m)).join('');
+            const html = models.map(m => ModelCard.render(m)).join('');
+            grid.insertAdjacentHTML('beforeend', html);
             lucide.createIcons({ nodes: [grid] });
             ModelCard.initCharts(models);
+            
+            this.currentPage++;
         } catch (error) {
-            grid.innerHTML = `
-                <div class="empty-state" style="grid-column:1/-1">
-                    <i data-lucide="wifi-off"></i>
-                    <h3>Ошибка загрузки</h3>
-                    <p>${Helpers.escapeHtml(error.message)}</p>
-                </div>
-            `;
-            lucide.createIcons({ nodes: [grid] });
+            if (this.currentPage === 1) {
+                grid.innerHTML = `
+                    <div class="empty-state" style="grid-column:1/-1">
+                        <i data-lucide="wifi-off"></i>
+                        <h3>Ошибка загрузки</h3>
+                        <p>${Helpers.escapeHtml(error.message)}</p>
+                    </div>
+                `;
+                lucide.createIcons({ nodes: [grid] });
+            }
         }
+        
+        this.isLoading = false;
     },
 
     setSort(sort) {
@@ -130,6 +223,11 @@ const App = {
             }[sort]);
         });
         
+        this.resetPagination();
+        const gridId = this.currentRoute === '#/local' ? 'local-models-grid' : 'models-grid';
+        const grid = document.getElementById(gridId);
+        if (grid) grid.innerHTML = Helpers.createSkeletonCards(6);
+
         if (this.currentRoute === '#/local') {
             this.loadLocalModels();
         } else {
@@ -143,7 +241,7 @@ const App = {
             <div class="container">
                 <div class="page-hero">
                     <h1>Локальные <span class="accent">ИИ-модели</span></h1>
-                    <p>Открытые модели (Open Weights) до 32B параметров для запуска на личном железе. Оценка оптимизации VRAM и скорости вывода.</p>
+                    <p>Открытые модели (Open Weights) до 32B параметров для запуска на личном железе. Оценка логики, следования инструкциям и скорости вывода.</p>
                 </div>
                 <div class="controls-bar">
                     <div class="search-wrapper">
@@ -169,22 +267,41 @@ const App = {
         if (searchInput) {
             searchInput.addEventListener('input', Helpers.debounce((e) => {
                 this.currentSearch = e.target.value;
+                this.resetPagination();
+                const grid = document.getElementById('local-models-grid');
+                if (grid) grid.innerHTML = Helpers.createSkeletonCards(6);
                 this.loadLocalModels();
             }, 300));
         }
 
+        this.resetPagination();
         await this.loadLocalModels();
+        this.initObserver(() => this.loadLocalModels());
+        this.observeSentinel(document.getElementById('local-models-grid'));
     },
 
     async loadLocalModels() {
+        if (this.isLoading || !this.hasMore) return;
+        this.isLoading = true;
+
         const grid = document.getElementById('local-models-grid');
-        if (!grid) return;
+        if (!grid) {
+            this.isLoading = false;
+            return;
+        }
 
         try {
-            const models = await API.getLocalModels(this.currentSort, this.currentSearch);
-            // No need to cache locally in this simple implementation
+            const models = await API.getLocalModels(this.currentSort, this.currentSearch, this.currentPage, this.limit);
 
-            if (models.length === 0) {
+            if (this.currentPage === 1) {
+                grid.innerHTML = '';
+            }
+
+            if (models.length < this.limit) {
+                this.hasMore = false;
+            }
+
+            if (models.length === 0 && this.currentPage === 1) {
                 grid.innerHTML = `
                     <div class="empty-state" style="grid-column:1/-1">
                         <i data-lucide="search-x"></i>
@@ -193,22 +310,30 @@ const App = {
                     </div>
                 `;
                 lucide.createIcons({ nodes: [grid] });
+                this.isLoading = false;
                 return;
             }
 
-            grid.innerHTML = models.map(m => LocalModelCard.render(m)).join('');
+            const html = models.map(m => LocalModelCard.render(m)).join('');
+            grid.insertAdjacentHTML('beforeend', html);
             lucide.createIcons({ nodes: [grid] });
             LocalModelCard.initCharts(models);
+
+            this.currentPage++;
         } catch (error) {
-            grid.innerHTML = `
-                <div class="empty-state" style="grid-column:1/-1">
-                    <i data-lucide="wifi-off"></i>
-                    <h3>Ошибка загрузки</h3>
-                    <p>${Helpers.escapeHtml(error.message)}</p>
-                </div>
-            `;
-            lucide.createIcons({ nodes: [grid] });
+            if (this.currentPage === 1) {
+                grid.innerHTML = `
+                    <div class="empty-state" style="grid-column:1/-1">
+                        <i data-lucide="wifi-off"></i>
+                        <h3>Ошибка загрузки</h3>
+                        <p>${Helpers.escapeHtml(error.message)}</p>
+                    </div>
+                `;
+                lucide.createIcons({ nodes: [grid] });
+            }
         }
+
+        this.isLoading = false;
     },
 
     renderAboutPage() {

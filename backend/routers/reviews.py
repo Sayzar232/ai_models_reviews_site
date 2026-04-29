@@ -30,7 +30,7 @@ async def get_reviews(
     rows = await fetch_all(
         """
         SELECT r.id, r.user_id, r.model_id, r.overall_score, r.score_coding, r.score_speed,
-               r.score_price, r.score_availability, r.score_creativity, r.score_accuracy,
+               r.score_value, r.score_context, r.score_creativity, r.score_accuracy,
                r.text, r.tags, r.likes_count, r.dislikes_count, r.created_at,
                u.nickname, u.role as user_role, u.avatar_url,
                COALESCE(v.vote, 0) as user_vote
@@ -57,8 +57,8 @@ async def get_reviews(
             "overall_score": float(r["overall_score"]),
             "score_coding": float(r["score_coding"]),
             "score_speed": float(r["score_speed"]),
-            "score_price": float(r["score_price"]),
-            "score_availability": float(r["score_availability"]),
+            "score_value": float(r["score_value"]),
+            "score_context": float(r["score_context"]),
             "score_creativity": float(r["score_creativity"]),
             "score_accuracy": float(r["score_accuracy"]),
             "text": r["text"],
@@ -109,11 +109,11 @@ async def create_review(
     review = await fetch_one(
         """
         INSERT INTO reviews (user_id, model_id, overall_score, score_coding, score_speed,
-                             score_price, score_availability, score_creativity, score_accuracy,
+                             score_value, score_context, score_creativity, score_accuracy,
                              text, tags)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb)
         RETURNING id, user_id, model_id, overall_score, score_coding, score_speed,
-                  score_price, score_availability, score_creativity, score_accuracy,
+                  score_value, score_context, score_creativity, score_accuracy,
                   text, tags, created_at
         """,
         current_user["id"],
@@ -121,8 +121,8 @@ async def create_review(
         data.overall_score,
         data.score_coding,
         data.score_speed,
-        data.score_price,
-        data.score_availability,
+        data.score_value,
+        data.score_context,
         data.score_creativity,
         data.score_accuracy,
         data.text,
@@ -139,8 +139,8 @@ async def create_review(
         "overall_score": float(review["overall_score"]),
         "score_coding": float(review["score_coding"]),
         "score_speed": float(review["score_speed"]),
-        "score_price": float(review["score_price"]),
-        "score_availability": float(review["score_availability"]),
+        "score_value": float(review["score_value"]),
+        "score_context": float(review["score_context"]),
         "score_creativity": float(review["score_creativity"]),
         "score_accuracy": float(review["score_accuracy"]),
         "text": review["text"],
